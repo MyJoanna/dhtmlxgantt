@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>项目管理</title>
+		<link rel="stylesheet" type="text/css" href="css/dhtmlxgantt.css"/>
+		<link rel="stylesheet" type="text/css" href="css/font-awesome.min.css"/>
+		<script src="js/dhtmlxgantt.js" type="text/javascript" charset="utf-8"></script>
+		<script src="js/locale_cn.js" type="text/javascript" charset="utf-8"></script>
+		<style>
+			html, body {
+				height: 100%;
+				padding: 0px;
+				margin: 0px;
+				overflow: hidden;
+			}
+			.fa {
+				cursor: pointer;
+				font-size: 14px;
+				text-align: center;
+				opacity: 0.2;
+				padding: 5px;
+			}
+	
+			.fa:hover {
+				opacity: 1;
+			}
+	
+			.fa-pencil {
+				color: #666;
+			}
+			.fa-plus {
+				color: #328EA0;
+			}
+	
+			.fa-times {
+				color: red;
+			}
+			.weekend{
+				background: #ccc !important;
+			}
+			.gantt_task_progress {
+				text-align: left;
+				padding-left: 10px;
+				box-sizing: border-box;
+				color: white;
+				font-weight: bold;
+			}
+			.dhx_cal_ltext{padding: 20px;}
+			.dhx_cal_ltext input{margin-bottom: 20px;height: 25px;width:200px;margin-left: 10px;padding-left: 10px;}
+			.gantt_section_time{margin-top: 10px;}
+			.gantt_section_time .gantt_time_selects select{height: 30px;margin-bottom:30px;}
+			.gantt_duration{height: 30px;line-height: 30px;}
+			.gantt_duration .gantt_duration_dec, .gantt_duration .gantt_duration_inc{width: 30px;}
+		</style>
+	</head>	
+	<body>
+		<div id="ganttu_box" style="width: 100%; height: 100%;"></div>
+	</body>
+	<script type="text/javascript">
+		var tasks = {
+			data:[
+				{id:1,proCode:'10001',text:'项目一',start_date:'20-04-2019',end_date:'28-05-2019',progress:0.6,worker:['张三','李四','王五']},
+				{id:2,proCode:'10002',text:'项目二',start_date:'22-04-2019',end_date:'29-04-2019',progress:0.5,worker:['张三']},
+				{id:3,proCode:'10003',text:'项目三',start_date:'18-04-2019',end_date:'26-04-2019',progress:0.4,worker:['张三']},
+				{id:4,proCode:'10004',text:'项目四',start_date:'16-04-2019',end_date:'28-04-2019',progress:0.3,worker:['张三']},
+				{id:5,proCode:'10005',text:'项目五',start_date:'20-04-2019',end_date:'28-04-2019',progress:0.2,worker:['张三']},
+				{id:6,proCode:'10006',text:'项目六',start_date:'25-04-2019',end_date:'10-05-2019',progress:0.5,worker:['张三']},
+				{id:7,proCode:'10007',text:'项目七',start_date:'20-04-2019',end_date:'28-04-2019',progress:0.8,worker:['张三']},
+				{id:8,proCode:'10008',text:'项目八',start_date:'19-04-2019',end_date:'24-04-2019',progress:0.2,worker:['张三']},
+				{id:9,proCode:'10009',text:'项目九',start_date:'20-04-2019',end_date:'28-04-2019',progress:0.5,worker:['张三']},
+				{id:10,proCode:'10010',text:'项目十',start_date:'20-04-2019',end_date:'28-04-2019',progress:0.2,worker:['张三']}
+			]
+		}
+		
+		var colHeader = '<div class="gantt_grid_head_cell gantt_grid_head_add" onclick="gantt.createTask()"></div>',
+		colContent = function (task) {
+			return ('<i class="fa gantt_button_grid gantt_grid_edit fa-pencil" onclick="clickGridButton(' + task.id + ', \'edit\')"></i>' +
+				'<i class="fa gantt_button_grid gantt_grid_add fa-plus" onclick="clickGridButton(' + task.id + ', \'add\')"></i>' +
+				'<i class="fa gantt_button_grid gantt_grid_delete fa-times" onclick="clickGridButton(' + task.id + ', \'delete\')"></i>');
+		};
+		
+		gantt.config.columns = [
+			{name:"id",label:"",align: "center",width:20},
+			{
+				name: "buttons",
+				label: colHeader,
+				width:80,
+				align: "center",
+				template: colContent
+			},
+			{name:"proCode",label:"编号",align: "center"},
+			{name:"text",label:"名称",align: "center"},
+			{name:"start_date",label:"开始",align: "center"},
+			{name:"end_date",label:"结束",align: "center"},
+			{name:"worker",label:"资源分配",align: "center"},
+		]
+		
+		function clickGridButton(id, action) {
+			switch (action) {
+				case "edit":
+					gantt.showLightbox(id);
+					break;
+				case "add":
+					gantt.createTask(null, id);
+					break;
+				case "delete":
+					gantt.confirm({
+						title: gantt.locale.labels.confirm_deleting_title,
+						text: gantt.locale.labels.confirm_deleting,
+						callback: function (res) {
+							if (res)
+								gantt.deleteTask(id);
+						}
+					});
+					break;
+			}
+		}
+
+		
+		var weekScaleTemplate = function (date) {
+			var dateToStr = gantt.date.date_to_str("%m %d");
+			var endDate = gantt.date.add(gantt.date.add(date, 1, "week"), -1, "day");
+			return dateToStr(date) + " - " + dateToStr(endDate);
+		};
+	
+		var daysStyle = function(date){
+			var dateToStr = gantt.date.date_to_str("%D");
+			if (dateToStr(date) == "六"||dateToStr(date) == "日")  return "weekend";
+		
+			return "";
+		};
+	
+		gantt.config.subscales = [
+			{unit: "week", step: 1, template: weekScaleTemplate},
+			{unit:"day", step:1, date:"%D", css:daysStyle}
+		];
+		
+		
+		gantt.config.layout = {
+			css: "gantt_container",
+			cols: [
+				{
+					width:700,
+					min_width:600,
+					rows:[
+						{view: "grid", scrollX: "gridScroll", scrollable: true, scrollY: "scrollVer"},
+						{view: "scrollbar", id: "gridScroll", group:"horizontal"}
+					]
+				},
+				{resizer: true, width: 1},
+				{
+					rows:[
+						{view: "timeline", scrollX: "scrollHor", scrollY: "scrollVer"},
+						{view: "scrollbar", id: "scrollHor", group:"horizontal"}
+					]
+				},
+				{view: "scrollbar", id: "scrollVer"}
+			]
+		};
+		
+		gantt.templates.progress_text = function (start, end, task) {
+			return "<span style='text-align:left;'>" + Math.round(task.progress * 100) + "% </span>";
+		};
+		
+		gantt.form_blocks["my_editor"] = {
+			render: function (sns) {
+				return "<div class='dhx_cal_ltext' style='height:60px;'>项目名称&nbsp;<input type='text'><br/>资源分配&nbsp;<input type='text'></div>";
+			},
+			set_value: function (node, value, task) {	
+				node.childNodes[0].value = 10000 +(tasks.data.length+1);
+				node.childNodes[1].value = value || "";
+				node.childNodes[4].value = task.worker || "";
+			},
+			get_value: function (node, task) {
+				task.proCode = 10000 +(tasks.data.length+1);
+				task.worker = node.childNodes[4].value;
+				return node.childNodes[1].value;
+			},
+			focus: function (node) {
+				var a = node.childNodes[1];
+				a.select();
+				a.focus();
+			}
+		};
+		
+		gantt.config.lightbox.sections = [
+			{name: "description", height: 200, map_to: "text", type: "my_editor", focus: true},
+			{name: "time", type: "duration", map_to: "auto"}
+		];
+		
+		
+		gantt.config.scale_unit = "month";
+		gantt.config.step = 1;
+		gantt.config.date_scale = "%Y,%m";
+		gantt.config.start_on_monday = true;
+		gantt.config.scale_height =90;
+		gantt.config.autoscroll = true;
+		gantt.config.calendar_property = "start_date";
+		gantt.config.calendar_property = "end_date";
+		gantt.init("ganttu_box");
+		gantt.parse(tasks);
+	</script>
+</html>
